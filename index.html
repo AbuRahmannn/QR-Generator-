@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QR Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+    --primary:#5b6dfc;
+    --bg:#f4f6fb;
+    --card:#ffffff;
+    --text:#222;
+}
+
+body.dark {
+    --bg:#0f172a;
+    --card:#1e293b;
+    --text:#f1f5f9;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI', sans-serif;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    transition:0.3s ease;
+}
+
+.wrapper{
+    width:950px;
+    max-width:95%;
+    background:var(--card);
+    border-radius:20px;
+    box-shadow:0 25px 60px rgba(0,0,0,0.08);
+    display:flex;
+    overflow:hidden;
+}
+
+.left{
+    flex:1;
+    padding:40px;
+}
+
+.right{
+    flex:1;
+    background:linear-gradient(135deg,#5b6dfc,#8b5cf6);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:white;
+    text-align:center;
+    padding:40px;
+}
+
+h1{
+    font-size:26px;
+    margin-bottom:10px;
+}
+
+.subtitle{
+    font-size:14px;
+    opacity:0.7;
+    margin-bottom:30px;
+}
+
+label{
+    font-size:13px;
+    font-weight:600;
+    margin-top:15px;
+    display:block;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin-top:6px;
+    border-radius:8px;
+    border:1px solid #ddd;
+    font-size:14px;
+}
+
+input:focus{
+    border-color:var(--primary);
+    outline:none;
+}
+
+.color-row{
+    display:flex;
+    gap:10px;
+}
+
+button{
+    margin-top:20px;
+    padding:12px;
+    border-radius:8px;
+    border:none;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.2s ease;
+}
+
+.primary{
+    background:var(--primary);
+    color:white;
+}
+
+.primary:hover{
+    opacity:0.9;
+}
+
+.secondary{
+    background:#e2e8f0;
+}
+
+.secondary:hover{
+    background:#cbd5e1;
+}
+
+.download-row{
+    display:flex;
+    gap:10px;
+}
+
+.preview-box{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+.dark .preview-box{
+    background:#334155;
+}
+
+.toggle{
+    position:absolute;
+    top:20px;
+    right:20px;
+    background:none;
+    border:none;
+    font-size:20px;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<button class="toggle" onclick="toggleDark()">🌙</button>
+
+<div class="wrapper">
+
+<div class="left">
+    <h1>QR Studio</h1>
+    <p class="subtitle">Create beautiful, customizable QR codes instantly</p>
+
+    <input type="text" id="link" placeholder="Enter your URL">
+
+    <label>QR Color & Background</label>
+    <div class="color-row">
+        <input type="color" id="fill_color" value="#000000">
+        <input type="color" id="back_color" value="#ffffff">
+    </div>
+
+    <label>Upload Logo (Optional)</label>
+    <input type="file" id="logo">
+
+    <button class="primary" onclick="previewQR()">Generate Preview</button>
+
+    <div class="download-row">
+        <button class="secondary" onclick="downloadPNG()">Download PNG</button>
+        <button class="secondary" onclick="downloadSVG()">Download SVG</button>
+    </div>
+</div>
+
+<div class="right">
+    <div class="preview-box" id="preview">
+        <p>QR Preview appears here</p>
+    </div>
+</div>
+
+</div>
+
+<script>
+function toggleDark(){
+    document.body.classList.toggle("dark");
+}
+
+function previewQR(){
+    let formData=new FormData();
+    formData.append("link",document.getElementById("link").value);
+    formData.append("fill_color",document.getElementById("fill_color").value);
+    formData.append("back_color",document.getElementById("back_color").value);
+
+    let logoFile=document.getElementById("logo").files[0];
+    if(logoFile){
+        formData.append("logo",logoFile);
+    }
+
+    fetch('/preview',{
+        method:'POST',
+        body:formData
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        if(data.error){
+            alert(data.error);
+            return;
+        }
+
+        document.getElementById("preview").innerHTML=
+        `<img src="data:image/png;base64,${data.image}" width="220">`;
+    });
+}
+
+function downloadPNG(){
+    let form=new FormData();
+    form.append("link",document.getElementById("link").value);
+
+    fetch('/download_png',{method:'POST',body:form})
+    .then(res=>res.blob())
+    .then(blob=>{
+        let a=document.createElement("a");
+        a.href=URL.createObjectURL(blob);
+        a.download="qr_code.png";
+        a.click();
+    });
+}
+
+function downloadSVG(){
+    let form=new FormData();
+    form.append("link",document.getElementById("link").value);
+
+    fetch('/download_svg',{method:'POST',body:form})
+    .then(res=>res.blob())
+    .then(blob=>{
+        let a=document.createElement("a");
+        a.href=URL.createObjectURL(blob);
+        a.download="qr_code.svg";
+        a.click();
+    });
+}
+</script>
+
+</body>
+</html>
