@@ -225,6 +225,7 @@ Contributions are welcome.
 **Rahman**
 
 GitHub: https://github.com/AbuRahmannn
+Live Demo: https://qr-generator-ujy4.onrender.com/
 
 If you found this project useful, consider giving it a ⭐ on GitHub.
 
