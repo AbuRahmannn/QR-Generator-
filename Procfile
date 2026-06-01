@@ -1,0 +1,1 @@
+web: gunicorn qrscanner:app
